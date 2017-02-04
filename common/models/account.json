@@ -1,0 +1,74 @@
+{
+  "name": "account",
+  "base": "Model",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "id": {
+      "type": "number",
+      "id": true,
+      "required": true,
+      "index": {
+        "unique": true
+      }
+    },
+    "email": {
+      "type": "string",
+      "required": true,
+      "index": {
+        "unique": true
+      }
+    },
+    "username": {
+      "type": "string",
+      "required": true
+    },
+    "password": {
+      "type": "string",
+      "required": true
+    },
+    "publicKey": {
+      "type": "string",
+      "postgresql": {
+        "columnName": "publicKey"
+      }
+    },
+    "createdAt": {
+      "type": "date",
+      "postgresql": {
+        "columnName": "createdAt"
+      }
+    },
+    "updatedAt": {
+      "type": "date",
+      "postgresql": {
+        "columnName": "updatedAt"
+      }
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "login"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "logout"
+    }
+  ],
+  "methods": {}
+}

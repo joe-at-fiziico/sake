@@ -1,0 +1,84 @@
+{
+  "name": "record",
+  "base": "Model",
+  "idInjection": false,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "uid": {
+      "type": "number",
+      "required": true
+    },
+    "tid": {
+      "type": "number",
+      "required": true
+    },
+    "amount": {
+      "type": "number",
+      "required": true
+    },
+    "location": {
+      "type": "GeoPoint"
+    },
+    "comment": {
+      "type": "string"
+    },
+    "photo": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "date",
+      "postgresql": {
+        "columnName": "createdAt"
+      }
+    },
+    "updatedAt": {
+      "type": "date",
+      "postgresql": {
+        "columnName": "updatedAt"
+      }
+    }
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "add"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "get"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "edit"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "_remove"
+    },
+    {
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "creationInfo"
+    }
+  ],
+  "methods": {}
+}

@@ -1,0 +1,15 @@
+{
+  "postgres": {
+    "host": "",
+    "port": 0,
+    "database": "",
+    "username": "",
+    "password": "",
+    "name": "postgres",
+    "connector": "postgresql"
+  },
+  "db": {
+    "name": "db",
+    "connector": "memory"
+  }
+}
