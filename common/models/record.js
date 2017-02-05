@@ -11,7 +11,8 @@ function add(Record) {
         Record.create({
             uid: 1,
             amount: amount,
-            tid: 1
+            tid: type,
+            createdAt: Date.now()
         }, function(err, record) {
             return callback(err);
         });
