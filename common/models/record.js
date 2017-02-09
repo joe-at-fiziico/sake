@@ -1,3 +1,5 @@
+var util = require('util');
+
 module.exports = function(Record) {
 
     add(Record);
@@ -12,9 +14,10 @@ function add(Record) {
             uid: 1,
             amount: amount,
             tid: type,
+            comment: comment,
             createdAt: Date.now()
         }, function(err, record) {
-            return callback(err);
+            return callback(err, record);
         });
     };
 
@@ -38,10 +41,17 @@ function add(Record) {
 }
 
 function get(Record) {
-    Record.get = function(type, from, to, callback) {
-        return callback(null, [
+    Record.get = function(type, from, to, count, callback) {
 
-        ]);
+        var sql = ' SELECT * FROM "record" ORDER BY "createdAt" DESC LIMIT $1';
+        var params = [count ? count : 10];
+        Record.app.dataSources['postgres'].connector.query(sql, params, function(err, results) {
+            if (err) {
+                return callback(err);
+            }
+
+            return callback(null, results);
+        });
     };
 
     Record.remoteMethod(
@@ -51,7 +61,8 @@ function get(Record) {
             accepts: [
                 {arg: 'type', type: 'number', description: 'Type id', required: false},
                 {arg: 'from', type: 'date', description: 'Date from', required: false},
-                {arg: 'to', type: 'date', description: 'Date to', required: false}
+                {arg: 'to', type: 'date', description: 'Date to', required: false},
+                {arg: 'count', type: 'number', description: 'Record counts', required: false}
             ],
             returns: {type: 'object', root: true},
             http: [
@@ -61,29 +72,53 @@ function get(Record) {
     );
 }
 
+function generateUpdateSql(id, data) {
+    var updatePairs = '';
+    var prefix = '';
+
+    [ 'amount', 'tid', 'comment'].forEach(function(property) {
+        if (data[property] !== undefined) {
+            updatePairs += util.format(" %s \"%s\" = %s", prefix, property,
+                (data[property] === null) ? 'null' : '\'' + data[property] + '\'');
+            prefix = ',';
+        }
+    });
+
+    return util.format(" UPDATE record SET %s WHERE \"id\"='%s' ", updatePairs, id);
+}
+
 function edit(Record) {
     Record.edit = function(id, amount, type, location, comment, photo, callback) {
-        return callback(null, {
+        var sql = generateUpdateSql(id, {
+            amount: amount,
+            tid: type,
+            comment: comment
+        });
+        Record.app.dataSources['postgres'].connector.query(sql, function(err) {
+            if (err) {
+                return callback(err);
+            }
 
+            return callback();
         });
     };
 
     Record.remoteMethod(
         'edit',
         {
-            description: 'Modify a new record',
+            description: 'Modify a record',
             accepts: [
-                { arg: 'req', type: 'object',
-                    http: function(ctx) {
-                        return ctx.req;
-                    }
-                },
+                //{ arg: 'req', type: 'object',
+                //    http: function(ctx) {
+                //        return ctx.req;
+                //    }
+                //},
                 {arg: 'id', type: 'number', description: 'Record id', required: true},
-                {arg: 'amount', type: 'number', description: 'Amount', required: true},
-                {arg: 'type', type: 'number', description: 'Type id', required: true},
-                {arg: 'location', type: 'string', description: 'Location', required: true},
-                {arg: 'comment', type: 'string', description: 'Comment', required: true},
-                {arg: 'photo', type: 'string', description: 'Photos', required: true}
+                {arg: 'amount', type: 'number', description: 'Amount', required: false},
+                {arg: 'type', type: 'number', description: 'Type id', required: false},
+                {arg: 'location', type: 'string', description: 'Location', required: false},
+                {arg: 'comment', type: 'string', description: 'Comment', required: false},
+                {arg: 'photo', type: 'string', description: 'Photos', required: false}
             ],
             returns: {type: 'object', root: true},
             http: [

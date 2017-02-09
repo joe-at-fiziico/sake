@@ -36,12 +36,12 @@
         .inputtext {
             background: transparent;
             color: white;
-            font-size: 100%;
+            font-size: 150%;
             border: 0;
             outline: 0;
             border-bottom: 1px solid red;
         }
-        #btnAddRecord {
+        .btnCommon {
             background-color: #4CAF50; /* Green */
             border: none;
             color: white;
@@ -51,6 +51,11 @@
             display: inline-block;
             font-size: 16px;
         }
+        .resultText {
+            color: white;
+            font-size: 50%;
+            padding-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -58,9 +63,16 @@
     <div id="divAddRecord">
         <input type="text" id="textAmount" placeholder="amount" size="6" maxlength="4" class="centered textCentered inputtext"><br>
         <input type="text" id="textTypeId" placeholder="type" size="6" maxlength="20" class="centered textCentered inputtext" value="1"><br>
-        <input type="button" id="btnAddRecord" class="centered" value="Add">
+        <input type="button" id="btnAddRecord" class="centered btnCommon" value="Add">
     </div>
-    <div id="divResult" class="textCentered">
+    <div id="divView" class="textCentered">
+        <input type="button" id="btnGetRecord" class="btnCommon" value="Get">
+        <div id="divResult" class="textCentered">
+            <table id="records_table" border='1' class="resultText textCentered centered">
+                <tbody id="tbodyid">
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 </body>
@@ -78,6 +90,34 @@
             }
         });
     });
+
+    $("#btnGetRecord").click(function() {
+        getRecord(function(err, response) {
+            if (err) {
+                alert(err);
+            }
+            else {
+                $("#tbodyid").empty();
+
+                var trHTML = '';
+                $.each(response, function (key, value) {
+                    trHTML +=
+                            '<tr><td>' + value.amount +
+                            '</td><td>' + value.tid +
+                            '</td><td>' + value.comment +
+                            '</td><td>' + convertTime(value.createdAt) +
+                            '</td></tr>';
+                });
+
+                $('#tbodyid').append(trHTML);
+            }
+        });
+    });
+
+    function convertTime(UTC) {
+        var date = new Date(UTC);
+        return date.toString();
+    }
 
     //API
     function addRecord(amount, typeId, callback) {
@@ -97,5 +137,19 @@
             }
         });
     }
+
+    function getRecord(callback) {
+        $.ajax({
+            url: "/api/records",
+            type: 'get',
+            success: function (data, textStatus) {
+                callback(null, data);
+            },
+            error: function (data, textStatus) {
+                callback('Error');
+            }
+        });
+    }
+
 </script>
 </html>
