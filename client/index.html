@@ -63,6 +63,7 @@
     <div id="divAddRecord">
         <input type="text" id="textAmount" placeholder="amount" size="6" maxlength="4" class="centered textCentered inputtext"><br>
         <input type="text" id="textTypeId" placeholder="type" size="6" maxlength="20" class="centered textCentered inputtext" value="1"><br>
+        <input type="text" id="textComment" placeholder="comment" size="6" maxlength="20" class="centered textCentered inputtext"><br>
         <input type="button" id="btnAddRecord" class="centered btnCommon" value="Add">
     </div>
     <div id="divView" class="textCentered">
@@ -81,7 +82,8 @@
     $("#btnAddRecord").click(function() {
         var amount = $("#textAmount").val();
         var typeId = $("#textTypeId").val();
-        addRecord(amount, typeId, function(err) {
+        var comment = $("#textComment").val();
+        addRecord(amount, typeId, comment, function(err) {
             if (err) {
                 alert(err);
             }
@@ -120,10 +122,11 @@
     }
 
     //API
-    function addRecord(amount, typeId, callback) {
+    function addRecord(amount, typeId, comment, callback) {
         var data = {
             amount: amount,
-            type: typeId
+            type: typeId,
+            comment: comment
         };
         $.ajax({
             url: "/api/records",
