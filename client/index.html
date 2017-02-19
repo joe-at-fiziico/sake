@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>RECORD</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
     <style>
         body {
@@ -59,6 +64,11 @@
     </style>
 </head>
 <body>
+<script>
+//    $( function() {
+//        $( "#datepicker" ).datepicker();
+//    } );
+</script>
 <div id="divMain">
     <div id="divAddRecord">
         <input type="text" id="textAmount" placeholder="amount" size="6" maxlength="4" class="centered textCentered inputtext"><br>
@@ -75,10 +85,15 @@
             </table>
         </div>
     </div>
+    <!--<div id="divEdit">-->
+        <!--<p>-->
+            <!--<input type="text" id="datepicker" class="hasDatepicker">-->
+        <!--</p>-->
+        <!--<div id="ui-datepicker-div" class="ui-datepicker ui-widget ui-widget-content ui-helper-clearfix ui-corner-all"></div>-->
+    <!--</div>-->
 </div>
 </body>
 <script>
-
     $("#btnAddRecord").click(function() {
         var amount = $("#textAmount").val();
         var typeId = $("#textTypeId").val();
@@ -88,7 +103,7 @@
                 alert(err);
             }
             else {
-                alert('success');
+//                $("#btnGetRecord").onclick();
             }
         });
     });
@@ -103,8 +118,12 @@
 
                 var trHTML = '';
                 $.each(response, function (key, value) {
+                    var editButton = '<button onclick="setEditId(' + value.id + ')">' +
+                            '</button>';
+
                     trHTML +=
-                            '<tr><td>' + value.amount +
+                            '<tr><td>' + editButton +
+                            '</td><td>' + value.amount +
                             '</td><td>' + value.tid +
                             '</td><td>' + value.comment +
                             '</td><td>' + convertTime(value.createdAt) +
@@ -115,6 +134,20 @@
             }
         });
     });
+
+    function setEditId(id) {
+        var amount = $("#textAmount").val();
+        var typeId = $("#textTypeId").val();
+        var comment = $("#textComment").val();
+        editRecord(id, amount, typeId, comment, function(err) {
+            if (err) {
+                alert(err);
+            }
+            else {
+                alert('success');
+            }
+        });
+    }
 
     function convertTime(UTC) {
         var date = new Date(UTC);
@@ -145,6 +178,25 @@
         $.ajax({
             url: "/api/records",
             type: 'get',
+            success: function (data, textStatus) {
+                callback(null, data);
+            },
+            error: function (data, textStatus) {
+                callback('Error');
+            }
+        });
+    }
+
+    function editRecord(recordId, amount, typeId, comment, callback) {
+        var data = {
+            amount: amount,
+            type: typeId,
+            comment: comment
+        };
+        $.ajax({
+            url: "/api/records/" + recordId,
+            type: 'PUT',
+            data: data,
             success: function (data, textStatus) {
                 callback(null, data);
             },
