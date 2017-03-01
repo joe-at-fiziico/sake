@@ -43,8 +43,17 @@ function add(Record) {
 function get(Record) {
     Record.get = function(type, from, to, count, callback) {
 
-        var sql = ' SELECT * FROM "record" ORDER BY "createdAt" DESC LIMIT $1';
-        var params = [count ? count : 10];
+        var sql = ' SELECT * FROM "record" ORDER BY "createdAt" DESC ';
+
+        var params = [];
+        var iParam = 1;
+        var options = '';
+        if (count) {
+            options = ' LIMIT $1 ';
+            params.push(count);
+        }
+        sql += options;
+
         Record.app.dataSources['postgres'].connector.query(sql, params, function(err, results) {
             if (err) {
                 return callback(err);
