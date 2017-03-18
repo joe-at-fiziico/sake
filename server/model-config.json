@@ -37,6 +37,10 @@
     "dataSource": "postgres",
     "public": true
   },
+  "budget": {
+    "dataSource": "postgres",
+    "public": true
+  },
   "record": {
     "dataSource": "postgres",
     "public": true

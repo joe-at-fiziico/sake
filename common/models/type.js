@@ -26,11 +26,15 @@ function add(Type) {
 
 function get(Type) {
     Type.get = function(callback) {
-        return callback(null, [{
-            id: 1,
-            name: 'Eat',
-            description: ''
-        }]);
+
+        var sql = ' SELECT id, name, description FROM "type" ORDER BY id ';
+        Type.app.dataSources['postgres'].connector.query(sql, function(err, results) {
+            if (err) {
+                return callback(err);
+            }
+
+            return callback(null, results);
+        });
     };
 
     Type.remoteMethod(

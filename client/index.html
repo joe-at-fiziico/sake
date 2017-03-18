@@ -68,12 +68,17 @@
 //    $( function() {
 //        $( "#datepicker" ).datepicker();
 //    } );
+//        <input type="text" id="textTypeId" placeholder="type" size="6" maxlength="20" class="centered textCentered inputtext" value="1"><br>
+
 </script>
 <div id="divMain">
     <div id="divAddRecord">
-        <input type="text" id="textAmount" placeholder="amount" size="6" maxlength="4" class="centered textCentered inputtext"><br>
-        <input type="text" id="textTypeId" placeholder="type" size="6" maxlength="20" class="centered textCentered inputtext" value="1"><br>
-        <input type="text" id="textComment" placeholder="comment" size="6" maxlength="20" class="centered textCentered inputtext"><br>
+        <input type="text" id="textAmount" placeholder="amount" size="6" maxlength="5" class="centered textCentered inputtext"><br>
+
+        <select name="Type" id="selectTypeId" class="centered textCentered inputtext">
+        </select>
+
+        <input type="text" id="textComment" placeholder="comment" size="10" maxlength="20" class="centered textCentered inputtext"><br>
         <div>
             <input type="button" id="btnAddRecord" class="centered btnCommon" value="Add">
         </div>
@@ -82,6 +87,9 @@
         </div>
         <div>
             <input type="button" id="btnSummarize" class="centered btnCommon" value="Summarize">
+        </div>
+        <div>
+            <input type="button" id="btnBudget" class="centered btnCommon" value="Budget">
         </div>
     </div>
     <div id="divView" class="textCentered">
@@ -101,28 +109,76 @@
 </div>
 </body>
 <script>
+    var types = {};
+    var budgets = {};
+    var records = [];
+    var purchase = {};
+
+    getTypes(function(err, results) {
+        if (err) {
+            alert(err);
+        }
+        else {
+            for (var i = 0; i < results.length; i++) {
+                types[results[i].id] = results[i];
+                $("#selectTypeId").append($("<option></option>").attr("value", results[i].id).text(results[i].name));
+            }
+            $('#selectTypeId').get(0).selectedIndex = 0;
+            getBudget(function(err, results) {
+                if (err) {
+                    alert(err);
+                }
+                else {
+                    for (var i = 0; i < results.length; i++) {
+                        budgets[results[i].tid] = results[i];
+                    }
+                }
+            });
+        }
+    });
+
+    function getTypeName(tid) {
+        return types[tid] ? types[tid].name : 'Unknown'
+    }
+
+    function countPurchase(callback) {
+        purchase = {};
+        getRecord(0, function(err, results) {
+            $.each(results, function (key, value) {
+                if (purchase[value.tid] === undefined) {
+                    purchase[value.tid] = value.amount;
+                }
+                else {
+                    purchase[value.tid] += value.amount;
+                }
+            });
+            callback();
+        });
+    }
+
     $("#btnAddRecord").click(function() {
         var amount = $("#textAmount").val();
-        var typeId = $("#textTypeId").val();
+        var typeId = $('#selectTypeId').find('option:selected').val();
         var comment = $("#textComment").val();
         addRecord(amount, typeId, comment, function(err) {
             if (err) {
                 alert(err);
             }
             else {
-//                $("#btnGetRecord").onclick();
+                doGetRecord(5);
             }
         });
     });
 
-    $("#btnGetRecord").click(function() {
-        getRecord(10, function(err, response) {
+    function doGetRecord(counts) {
+        getRecord(counts, function(err, response) {
             if (err) {
                 alert(err);
             }
             else {
                 $("#tbodyid").empty();
 
+                records = response;
                 var trHTML = '';
                 $.each(response, function (key, value) {
                     var editButton = '<button onclick="setEditId(' + value.id + ')">' +
@@ -131,7 +187,7 @@
                     trHTML +=
                             '<tr><td>' + editButton +
                             '</td><td>' + value.amount +
-                            '</td><td>' + value.tid +
+                            '</td><td>' + getTypeName(value.tid) +
                             '</td><td>' + value.comment +
                             '</td><td>' + convertTime(value.createdAt) +
                             '</td></tr>';
@@ -140,6 +196,10 @@
                 $('#tbodyid').append(trHTML);
             }
         });
+    }
+
+    $("#btnGetRecord").click(function() {
+        doGetRecord(10);
     });
 
     $("#btnSummarize").click(function() {
@@ -149,7 +209,6 @@
             }
             else {
                 $("#tbodyid").empty();
-
 
                 var totalAmount = 0;
                 var amounts = {};
@@ -167,7 +226,7 @@
 
                 for (var p in amounts) {
                     trHTML +=
-                            '<tr><td>' + p +
+                            '<tr><td>' + getTypeName(p) +
                             '</td><td>' + amounts[p] +
                             '</td></tr>';
                 }
@@ -176,6 +235,57 @@
             }
         });
     });
+
+    $("#btnBudget").click(function() {
+        $("#tbodyid").empty();
+
+        countPurchase(function(err) {
+            if (err) {
+                alert(err);
+                return;
+            }
+
+            var trHTML = '';
+
+            for (var p in budgets) {
+                trHTML +=
+                        '<tr><td>' + getTypeName(budgets[p].tid) +
+                        '</td><td>' + budgets[p].amount +
+                        '</td><td>' + (purchase[p] ? purchase[p] : 0) +
+                        '</td></tr>';
+            }
+
+            $('#tbodyid').append(trHTML);
+        });
+
+
+    });
+
+    function getTypes(callback) {
+        $.ajax({
+            url: "/api/types",
+            type: 'get',
+            success: function (data, textStatus) {
+                callback(null, data);
+            },
+            error: function (data, textStatus) {
+                callback('Error');
+            }
+        });
+    }
+
+    function getBudget(callback) {
+        $.ajax({
+            url: "/api/budgets",
+            type: 'get',
+            success: function (data, textStatus) {
+                callback(null, data);
+            },
+            error: function (data, textStatus) {
+                callback('Error');
+            }
+        });
+    }
 
     function setEditId(id) {
         var amount = $("#textAmount").val();
