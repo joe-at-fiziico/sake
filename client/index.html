@@ -27,6 +27,9 @@
         .textCentered {
             text-align: center;
         }
+        .textRight {
+            text-align: right;
+        }
         button:focus {
             border-color: red;
         }
@@ -62,6 +65,9 @@
             font-size: 50%;
             padding-top: 2px;
         }
+        #divButtonContainer {
+            margin: 30px 0;
+        }
     </style>
 </head>
 <body>
@@ -74,13 +80,13 @@
 </script>
 <div id="divMain">
     <div id="divAddRecord">
-        <input type="text" id="textAmount" placeholder="$" size="12" maxlength="12" class="centered inputtext"><br>
+        <input type="text" id="textAmount" placeholder="$" size="8" maxlength="12" class="inputtext centered textCentered"><br>
 
-        <select name="Type" id="selectTypeId" class="centered inputtext">
-        </select>
-        <br>
+        <select name="Type" id="selectTypeId" class="inputtext centered textCentered"></select><br>
 
-        <input type="text" id="textComment" placeholder="" size="16" maxlength="32" class="centered inputtext"><br>
+        <input type="text" id="textComment" placeholder="" size="16" maxlength="32" class="inputtext centered textCentered"><br>
+    </div>
+    <div id="divButtonContainer">
         <div>
             <input type="button" id="btnAddRecord" class="centered btnCommon" value="Add">
         </div>
@@ -170,6 +176,8 @@
                 alert(err);
             }
             else {
+                $("#textAmount").val("");
+                $("#textComment").val("");
                 doGetRecord(5);
             }
         });
