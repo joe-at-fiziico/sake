@@ -54,7 +54,8 @@
             text-align: center;
             text-decoration: none;
             display: inline-block;
-            font-size: 16px;
+            font-size: 32px;
+            margin: 20px;
         }
         .resultText {
             color: white;
@@ -73,12 +74,13 @@
 </script>
 <div id="divMain">
     <div id="divAddRecord">
-        <input type="text" id="textAmount" placeholder="amount" size="6" maxlength="5" class="centered textCentered inputtext"><br>
+        <input type="text" id="textAmount" placeholder="$" size="12" maxlength="12" class="centered inputtext"><br>
 
-        <select name="Type" id="selectTypeId" class="centered textCentered inputtext">
+        <select name="Type" id="selectTypeId" class="centered inputtext">
         </select>
+        <br>
 
-        <input type="text" id="textComment" placeholder="comment" size="10" maxlength="20" class="centered textCentered inputtext"><br>
+        <input type="text" id="textComment" placeholder="" size="16" maxlength="32" class="centered inputtext"><br>
         <div>
             <input type="button" id="btnAddRecord" class="centered btnCommon" value="Add">
         </div>
@@ -158,6 +160,9 @@
 
     $("#btnAddRecord").click(function() {
         var amount = $("#textAmount").val();
+
+        amount = Math.ceil(amount/436);
+
         var typeId = $('#selectTypeId').find('option:selected').val();
         var comment = $("#textComment").val();
         addRecord(amount, typeId, comment, function(err) {
