@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RECORD</title>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <style>
+        body {
+            background: black;
+            color: white;
+            font: 300%/1.45em "Helvetica Neue", HelveticaNeue, Helvetica, Arial, sans-serif;
+            padding-top: 40px;
+        }
+        .hide {
+            display: none
+        }
+        .centered {
+            position: relative;
+            left: 50%;
+            transform: translate(-50%, 0);
+        }
+        .textCentered {
+            text-align: center;
+        }
+        .textRight {
+            text-align: right;
+        }
+        button:focus {
+            border-color: red;
+        }
+        /*#divAddRecord {*/
+        /*margin: 40px 0;*/
+        /*padding: 20px;*/
+        /*background-color: transparent;*/
+        /*color: white;*/
+        /*outline: none;*/
+        /*font-size: 150%;*/
+        /*}*/
+        .inputtext {
+            background: transparent;
+            color: white;
+            font-size: 150%;
+            border: 0;
+            outline: 0;
+            border-bottom: 1px solid red;
+        }
+        .btnCommon {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 32px;
+            margin: 20px;
+        }
+        .resultText {
+            color: white;
+            font-size: 50%;
+            padding-top: 2px;
+        }
+        #divButtonContainer {
+            margin: 30px 0;
+        }
+        #divView {
+            width: 360px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+<script>
+    //    $( function() {
+    //        $( "#datepicker" ).datepicker();
+    //    } );
+    //        <input type="text" id="textTypeId" placeholder="type" size="6" maxlength="20" class="centered textCentered inputtext" value="1"><br>
+
+</script>
+<div id="divMain">
+    <div id="divAddRecord">
+        <input type="text" id="textAmount" placeholder="$" size="8" maxlength="12" class="inputtext centered textCentered"><br>
+
+    </div>
+    <div id="divButtonContainer">
+        <div>
+            <input type="button" id="btnIDRToTWD" class="centered btnCommon" value="IDR to TWD">
+        </div>
+        <div>
+            <input type="button" id="btnTWDToIDR" class="centered btnCommon" value="TWD to IDR">
+        </div>
+    </div>
+    <div id="divView" class="">
+        <div id="divResult" class="">
+            <label id="lblResult" border='1' class="resultText">
+            </label>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    var rate = 436;
+
+    function formatCurrency(s) {
+        var temp = s.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+        return temp;
+    }
+
+    $("#btnIDRToTWD").click(function() {
+        var amount = parseInt($("#textAmount").val());
+        var result = Math.ceil(amount/rate);
+        $("#lblResult").html("IDR " + formatCurrency(amount) + " => TWD " + formatCurrency(result));
+        $("#textAmount").val("");
+    });
+
+
+    $("#btnTWDToIDR").click(function() {
+        var amount = parseInt($("#textAmount").val());
+        var result = Math.ceil(amount*rate);
+        $("#lblResult").html("TWD " + formatCurrency(amount) + " => IDR " + formatCurrency(result));
+        $("#textAmount").val("");
+    });
+</script>
+</html>

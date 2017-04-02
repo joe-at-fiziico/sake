@@ -6,6 +6,7 @@ var boot = require('loopback-boot');
 var app = module.exports = loopback();
 
 app.use('/main', loopback.static(path.resolve(__dirname, '../client/index.html')));
+app.use('/rate', loopback.static(path.resolve(__dirname, '../client/convert.html')));
 
 app.start = function() {
   // start the web server
