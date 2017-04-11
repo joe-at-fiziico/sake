@@ -166,8 +166,6 @@
     $("#btnAddRecord").click(function() {
         var amount = $("#textAmount").val();
 
-        amount = Math.ceil(amount/436);
-
         var typeId = $('#selectTypeId').find('option:selected').val();
         var comment = $("#textComment").val();
         addRecord(amount, typeId, comment, function(err) {
