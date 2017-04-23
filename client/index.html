@@ -168,7 +168,8 @@
 
         var typeId = $('#selectTypeId').find('option:selected').val();
         var comment = $("#textComment").val();
-        addRecord(amount, typeId, comment, function(err) {
+        var time = new Date().getTime();
+        addRecord(amount, typeId, time, comment, function(err) {
             if (err) {
                 alert(err);
             }
@@ -313,14 +314,23 @@
 
     function convertTime(UTC) {
         var date = new Date(UTC);
-        return date.toString();
+        var options = {
+            weekday: "short",
+            year: "numeric",
+            month: "2-digit",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric"
+        };
+        return date.toLocaleString("en", options);
     }
 
     //API
-    function addRecord(amount, typeId, comment, callback) {
+    function addRecord(amount, typeId, time, comment, callback) {
         var data = {
             amount: amount,
             type: typeId,
+            time: time,
             comment: comment
         };
         $.ajax({

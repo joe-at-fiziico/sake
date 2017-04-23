@@ -9,13 +9,14 @@ module.exports = function(Record) {
 };
 
 function add(Record) {
-    Record.add = function(amount, type, location, comment, photo, callback) {
+    Record.add = function(amount, type, time, location, comment, photo, callback) {
         Record.create({
             uid: 1,
             amount: amount,
             tid: type,
             comment: comment,
-            createdAt: Date.now()
+            createdAt: time,
+            updatedAt: time
         }, function(err, record) {
             return callback(err, record);
         });
@@ -28,6 +29,7 @@ function add(Record) {
             accepts: [
                 {arg: 'amount', type: 'number', description: 'Amount', required: true},
                 {arg: 'type', type: 'number', description: 'Type id', required: true},
+                {arg: 'time', type: 'number', description: 'Time', required: true},
                 {arg: 'location', type: 'string', description: 'Location', required: false},
                 {arg: 'comment', type: 'string', description: 'Comment', required: false},
                 {arg: 'photo', type: 'string', description: 'Photo', required: false}
