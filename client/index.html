@@ -107,6 +107,28 @@
             </table>
         </div>
     </div>
+    <div id="divViewRecord" class="textCentered">
+        <div>
+            <input type="button" id="btnViewRecordLastMonth" class="centered btnCommon" value="Last">
+        </div>
+        <div>
+            <input type="button" id="btnViewRecordThisMonth" class="centered btnCommon" value="This">
+        </div>
+        <div>
+            <input type="button" id="btnViewRecordThisYear" class="centered btnCommon" value="Year">
+        </div>
+        <select name="Type" id="selectViewRecord" class="inputtext centered textCentered"></select><br>
+        <div id="divViewRecordResult" class="textCentered">
+            <table id="view_records_overview_table" border='1' class="resultText textCentered centered">
+                <tbody id="view_overview_tbodyid">
+                </tbody>
+            </table>
+            <table id="view_records_detail_table" border='1' class="resultText textCentered centered">
+                <tbody id="view_detail_tbodyid">
+                </tbody>
+            </table>
+        </div>
+    </div>
     <!--<div id="divEdit">-->
         <!--<p>-->
             <!--<input type="text" id="datepicker" class="hasDatepicker">-->
@@ -118,71 +140,260 @@
 <script>
     var types = {};
     var budgets = {};
-    var records = [];
+    var records = [];       // for record list view
+    var allRecords = [];    // for monthly/yearly view
+    var monthlyDataSets = {};
+
     var purchase = {};
 
-    getTypes(function(err, results) {
-        if (err) {
-            alert(err);
-        }
-        else {
-            for (var i = 0; i < results.length; i++) {
-                types[results[i].id] = results[i];
-                $("#selectTypeId").append($("<option></option>").attr("value", results[i].id).text(results[i].name));
-            }
-            $('#selectTypeId').get(0).selectedIndex = 0;
-            getBudget(function(err, results) {
-                if (err) {
-                    alert(err);
-                }
-                else {
-                    for (var i = 0; i < results.length; i++) {
-                        budgets[results[i].tid] = results[i];
-                    }
-                }
-            });
-        }
-    });
+    var currentMonth = 0;
+    var selectedPeriod = {};
 
-    function getTypeName(tid) {
+    function getPeriodOfMonth(offset) {
+        if (offset === undefined) {
+            offset = 0;
+        }
+
+        var date = new Date();
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+
+        var beginOfFirstDay = new Date(date.getFullYear(), date.getMonth() + offset, 1);
+        var EndOfLastDay = new Date(date.getFullYear(), date.getMonth() + offset + 1, 0);
+
+        return {
+            b: beginOfFirstDay.getTime(),
+            e: EndOfLastDay.getTime()
+        }
+    }
+
+    function getPeriodOfYear(offset) {
+        if (offset === undefined) {
+            offset = 0;
+        }
+
+        var date = new Date();
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+
+        var beginOfFirstDay = new Date(date.getFullYear() + offset, 1);
+        var EndOfLastDay = new Date(date.getFullYear() + offset + 1, 0);
+
+        return {
+            b: beginOfFirstDay.getTime(),
+            e: EndOfLastDay.getTime()
+        }
+    }
+
+    function getCurrentMonth() {
+        var date = new Date();
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+
+        return date.getMonth();
+    }
+
+    function getMonthId(value) {
+        var date = new Date(value);
+        date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+
+        return date.getMonth();
+    }
+
+    function getTypeNameById(tid) {
         return types[tid] ? types[tid].name : 'Unknown'
     }
 
-    function countPurchase(callback) {
-        purchase = {};
-        getRecord(0, function(err, results) {
-            $.each(results, function (key, value) {
-                if (purchase[value.tid] === undefined) {
-                    purchase[value.tid] = value.amount;
-                }
-                else {
-                    purchase[value.tid] += value.amount;
-                }
-            });
-            callback();
-        });
+    function convertToLocalTimeString(UTC) {
+        var date = new Date(UTC);
+        var options = {
+            weekday: "short",
+            year: "numeric",
+            month: "2-digit",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric"
+        };
+        return date.toLocaleString("en", options);
     }
 
-    $("#btnAddRecord").click(function() {
-        var amount = $("#textAmount").val();
+    function setAllRecords(records) {
+        for (var i = 0; i < records.length; i++) {
+            records[i]['monthId'] = getMonthId(records[i].createdAt);
+        }
+        allRecords = records;
+    }
 
-        var typeId = $('#selectTypeId').find('option:selected').val();
-        var comment = $("#textComment").val();
-        var time = new Date().getTime();
-        addRecord(amount, typeId, time, comment, function(err) {
+    function getMonthlyData(monthId, records) {
+
+        if (monthlyDataSets[monthId]) {
+            return monthlyDataSets[monthId];
+        }
+        else {
+//            {
+//                totalAmount:
+//                totalBudget:
+//                types: [
+//                    {
+//                        typeName:,
+//                        budget:,
+//                        amount:
+//                    }
+//                ]
+//            }
+            var monthlyData = {
+                totalAmount: 0,
+                totalBudget: 0,
+                types: {}
+            };
+
+            for (var p in types) {
+                monthlyData.types[p] = {
+                    typeName: types[p].name,
+                    budget: budgets[p].amount,
+                    amount: 0,
+                    records: []
+                }
+            }
+
+            for (var i = 0; i < records.length; i++) {
+                if (monthId == records[i].monthId) {
+                    monthlyData.totalAmount += records[i].amount;
+                    monthlyData.types[records[i].tid].amount += records[i].amount;
+                    monthlyData.types[records[i].tid].records.push(records[i]);
+                }
+            }
+
+            monthlyDataSets[monthId] = monthlyData;
+            return monthlyData;
+        }
+    }
+
+    // Main
+    initializeViewData();
+    doGetTypes();
+    doGetAllRecord();
+
+    function initializeViewData() {
+        currentMonth = getCurrentMonth();
+
+        // cal current month and last month and current year
+
+        // set button data
+        document.getElementById("btnViewRecordLastMonth").recordPeriod = getPeriodOfMonth(-1);
+        document.getElementById("btnViewRecordThisMonth").recordPeriod = selectedPeriod = getPeriodOfMonth(0);
+        document.getElementById("btnViewRecordThisYear").recordPeriod = getPeriodOfMonth(0);
+
+        var options = {
+            weekday: "short",
+            year: "numeric",
+            month: "2-digit",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric"
+        };
+
+        // set list data
+        for (var m = 0; m <= currentMonth; m++) {
+            console.log('initializeViewData==>' + m + ':' + getPeriodOfMonth(m - currentMonth).b);
+            $("#selectViewRecord").append($("<option></option>").attr("value", getPeriodOfMonth(m - currentMonth)).text(m));
+        }
+    }
+
+    function doGetTypes() {
+        apiGetTypes(function(err, results) {
             if (err) {
                 alert(err);
             }
             else {
-                $("#textAmount").val("");
-                $("#textComment").val("");
-                doGetRecord(5);
+                for (var i = 0; i < results.length; i++) {
+                    types[results[i].id] = results[i];
+                    $("#selectTypeId").append($("<option></option>").attr("value", results[i].id).text(results[i].name));
+                }
+                $('#selectTypeId').get(0).selectedIndex = 0;
+                apiGetBudget(function (err, results) {
+                    if (err) {
+                        alert(err);
+                    }
+                    else {
+                        for (var i = 0; i < results.length; i++) {
+                            budgets[results[i].tid] = results[i];
+                        }
+                    }
+                });
             }
         });
-    });
+    }
 
-    function doGetRecord(counts) {
-        getRecord(counts, function(err, response) {
+    function doGetAllRecord() {
+        apiGetRecord(10000, function(err, results) {
+            if (err) {
+                alert(err);
+            }
+            else {
+                setAllRecords(results);
+            }
+        });
+    }
+
+    function doShowMonthlyView(monthId) {
+        var trHTML = '';
+
+        $("#view_overview_tbodyid").empty();
+
+        trHTML +=
+                '<tr>' +
+                '<td>Type</td>' +
+                '<td>Amount</td>' +
+                '<td>Budget</td>' +
+                '</tr>';
+
+        var monthlyData = getMonthlyData(monthId, allRecords);
+
+        trHTML +=
+                '<tr>' +
+                '<td>All</td>' +
+                '<td>' + monthlyData.totalAmount + '</td>' +
+                '<td>' + monthlyData.totalBudget + '</td>' +
+                '</tr>';
+
+        for (var p in monthlyData.types) {
+            var typeData = monthlyData.types[p];
+            var detailButton = '<button onclick="doShowMonthlyTypeView(' + monthId + ',' + p + ')">' + '</button>';
+
+            trHTML +=
+                    '<tr>' +
+                    '<td>' + typeData.typeName + '</td>' +
+                    '<td>' + typeData.amount + '</td>' +
+                    '<td>' + typeData.budget + '</td>' +
+                    '<td>' + detailButton + '</td>' +
+                    '</tr>';
+        }
+
+        $('#view_overview_tbodyid').append(trHTML);
+    }
+
+    function doShowYearlyView(yearId) {
+        //TODO:
+
+    }
+
+    function doShowMonthlyTypeView(monthId, typeId) {
+        $("#view_records_detail_table").empty();
+
+        var records = monthlyDataSets[monthId].types[typeId].records;
+        var trHTML = '';
+        $.each(records, function (key, value) {
+            trHTML +=
+                    '<tr>' +
+                    '<td>' + value.amount + '</td>' +
+                    '<td>' + value.comment + '</td>' +
+                    '<td>' + convertToLocalTimeString(value.createdAt) + '</td>' +
+                    '</tr>';
+        });
+
+        $('#view_records_detail_table').append(trHTML);
+    }
+
+    function doShowRecordList(counts) {
+        apiGetRecord(counts, function(err, response) {
             if (err) {
                 alert(err);
             }
@@ -190,17 +401,19 @@
                 $("#tbodyid").empty();
 
                 records = response;
+
                 var trHTML = '';
                 $.each(response, function (key, value) {
-                    var editButton = '<button onclick="setEditId(' + value.id + ')">' +
+
+                    var editButton = '<button onclick="doSetEditId(' + value.id + ')">' +
                             '</button>';
 
                     trHTML +=
                             '<tr><td>' + editButton +
                             '</td><td>' + value.amount +
-                            '</td><td>' + getTypeName(value.tid) +
+                            '</td><td>' + getTypeNameById(value.tid) +
                             '</td><td>' + value.comment +
-                            '</td><td>' + convertTime(value.createdAt) +
+                            '</td><td>' + convertToLocalTimeString(value.createdAt) +
                             '</td></tr>';
                 });
 
@@ -209,12 +422,68 @@
         });
     }
 
+    function doSetEditId(id) {
+        var amount = $("#textAmount").val();
+        var typeId = $("#textTypeId").val();
+        var comment = $("#textComment").val();
+        apiEditRecord(id, amount, typeId, comment, function(err) {
+            if (err) {
+                alert(err);
+            }
+            else {
+                alert('success');
+            }
+        });
+    }
+
+    // Event handler
+
+    $("#selectViewRecord").change(function () {
+        selectedPeriod = $('#selectViewRecord').find('option:selected').value;
+        doShowMonthlyView(getMonthId(selectedPeriod.b + 1));
+    });
+
+    $("#btnAddRecord").click(function() {
+        var amount = $("#textAmount").val();
+
+        var typeId = $('#selectTypeId').find('option:selected').val();
+        var comment = $("#textComment").val();
+        var time = new Date().getTime();
+        apiAddRecord(amount, typeId, time, comment, function(err) {
+            if (err) {
+                alert(err);
+            }
+            else {
+                $("#textAmount").val("");
+                $("#textComment").val("");
+                doShowRecordList(5);
+            }
+        });
+    });
+
+    $("#btnViewRecordLastMonth").click(function() {
+        selectedPeriod = document.getElementById("btnViewRecordLastMonth").recordPeriod;
+        console.log('doShowMonthlyView==>' + selectedPeriod.b + ':' + getMonthId(selectedPeriod.b + 1));
+
+        doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
+    });
+
+    $("#btnViewRecordThisMonth").click(function() {
+        selectedPeriod = document.getElementById("btnViewRecordThisMonth").recordPeriod;
+        doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
+    });
+
+    $("#btnViewRecordThisYear").click(function() {
+        selectedPeriod = document.getElementById("btnViewRecordThisYear").recordPeriod;
+        doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
+    });
+
     $("#btnGetRecord").click(function() {
-        doGetRecord(10);
+        doShowRecordList(10);
     });
 
     $("#btnSummarize").click(function() {
-        getRecord(null, function(err, response) {
+        apiGetRecord(null, function(err, response) {
             if (err) {
                 alert(err);
             }
@@ -237,7 +506,7 @@
 
                 for (var p in amounts) {
                     trHTML +=
-                            '<tr><td>' + getTypeName(p) +
+                            '<tr><td>' + getTypeNameById(p) +
                             '</td><td>' + amounts[p] +
                             '</td></tr>';
                 }
@@ -260,7 +529,7 @@
 
             for (var p in budgets) {
                 trHTML +=
-                        '<tr><td>' + getTypeName(budgets[p].tid) +
+                        '<tr><td>' + getTypeNameById(budgets[p].tid) +
                         '</td><td>' + budgets[p].amount +
                         '</td><td>' + (purchase[p] ? purchase[p] : 0) +
                         '</td></tr>';
@@ -268,11 +537,10 @@
 
             $('#tbodyid').append(trHTML);
         });
-
-
     });
 
-    function getTypes(callback) {
+    // Restful API adapter
+    function apiGetTypes(callback) {
         $.ajax({
             url: "/api/types",
             type: 'get',
@@ -285,7 +553,7 @@
         });
     }
 
-    function getBudget(callback) {
+    function apiGetBudget(callback) {
         $.ajax({
             url: "/api/budgets",
             type: 'get',
@@ -298,35 +566,7 @@
         });
     }
 
-    function setEditId(id) {
-        var amount = $("#textAmount").val();
-        var typeId = $("#textTypeId").val();
-        var comment = $("#textComment").val();
-        editRecord(id, amount, typeId, comment, function(err) {
-            if (err) {
-                alert(err);
-            }
-            else {
-                alert('success');
-            }
-        });
-    }
-
-    function convertTime(UTC) {
-        var date = new Date(UTC);
-        var options = {
-            weekday: "short",
-            year: "numeric",
-            month: "2-digit",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric"
-        };
-        return date.toLocaleString("en", options);
-    }
-
-    //API
-    function addRecord(amount, typeId, time, comment, callback) {
+    function apiAddRecord(amount, typeId, time, comment, callback) {
         var data = {
             amount: amount,
             type: typeId,
@@ -346,7 +586,7 @@
         });
     }
 
-    function getRecord(count, callback) {
+    function apiGetRecord(count, callback) {
         var query = '';
         if (count) {
             query = '?count=' + count;
@@ -363,7 +603,7 @@
         });
     }
 
-    function editRecord(recordId, amount, typeId, comment, callback) {
+    function apiEditRecord(recordId, amount, typeId, comment, callback) {
         var data = {
             amount: amount,
             type: typeId,
