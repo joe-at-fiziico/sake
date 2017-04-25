@@ -13,15 +13,12 @@
             background: black;
             color: white;
             font: 300%/1.45em "Helvetica Neue", HelveticaNeue, Helvetica, Arial, sans-serif;
-            padding-top: 40px;
+            padding: 40px;
         }
         .hide {
             display: none
         }
         .centered {
-            position: relative;
-            left: 50%;
-            transform: translate(-50%, 0);
         }
         .textCentered {
             text-align: center;
@@ -55,7 +52,6 @@
             padding: 15px 32px;
             text-align: center;
             text-decoration: none;
-            display: inline-block;
             font-size: 32px;
             margin: 20px;
         }
@@ -64,9 +60,9 @@
             font-size: 50%;
             padding-top: 2px;
         }
-        #divButtonContainer {
-            margin: 30px 0;
-        }
+        /*#divButtonContainer {*/
+            /*margin: 30px 0;*/
+        /*}*/
     </style>
 </head>
 <body>
@@ -78,25 +74,23 @@
 
 </script>
 <div id="divMain">
-    <div id="divAddRecord">
-        <input type="text" id="textAmount" placeholder="$" size="8" maxlength="12" class="inputtext centered textCentered"><br>
-
-        <select name="Type" id="selectTypeId" class="inputtext centered textCentered"></select><br>
-
-        <input type="text" id="textComment" placeholder="" size="16" maxlength="32" class="inputtext centered textCentered"><br>
+    <div id="divAddRecord" class="centered">
+        <select name="Type" id="selectTypeId" class="inputtext textCentered"></select>
+        <br>
+        <input type="text" id="textComment" placeholder="" size="16" maxlength="32" class="inputtext">
+        <br>
+        <span>
+            $ <input type="text" id="textAmount" placeholder="" size="8" maxlength="12" class="inputtext textRight">
+        </span>
+        <br>
     </div>
-    <div id="divButtonContainer">
+    <div id="divButtonContainer" class="centered">
         <div>
-            <input type="button" id="btnAddRecord" class="centered btnCommon" value="Add">
+            <input type="button" id="btnAddRecord" class=" btnCommon" value="Add">
         </div>
         <div>
-            <input type="button" id="btnGetRecord" class="centered btnCommon" value="Get">
-        </div>
-        <div>
-            <input type="button" id="btnSummarize" class="centered btnCommon" value="Summarize">
-        </div>
-        <div>
-            <input type="button" id="btnBudget" class="centered btnCommon" value="Budget">
+            <input type="button" id="btnGetRecord" class=" btnCommon" value="Last 10">
+            <input type="button" id="btnSummarize" class=" btnCommon" value="Summary">
         </div>
     </div>
     <div id="divView" class="textCentered">
@@ -107,23 +101,18 @@
             </table>
         </div>
     </div>
-    <div id="divViewRecord" class="textCentered">
+    <div id="divViewRecord">
         <div>
-            <input type="button" id="btnViewRecordLastMonth" class="centered btnCommon" value="Last">
+            <input type="button" id="btnViewRecordLastMonth" class="centered btnCommon" value="Last Month">
+            <input type="button" id="btnViewRecordThisMonth" class="centered btnCommon" value="This Month">
+            <input type="button" id="btnViewRecordThisYear" class="centered btnCommon" value="This Year">
         </div>
-        <div>
-            <input type="button" id="btnViewRecordThisMonth" class="centered btnCommon" value="This">
-        </div>
-        <div>
-            <input type="button" id="btnViewRecordThisYear" class="centered btnCommon" value="Year">
-        </div>
-        <select name="Type" id="selectViewRecord" class="inputtext centered textCentered"></select><br>
         <div id="divViewRecordResult" class="textCentered">
-            <table id="view_records_overview_table" border='1' class="resultText textCentered centered">
+            <table id="view_records_overview_table" border='1' class="resultText textCentered">
                 <tbody id="view_overview_tbodyid">
                 </tbody>
             </table>
-            <table id="view_records_detail_table" border='1' class="resultText textCentered centered">
+            <table id="view_records_detail_table" border='1' class="resultText textCentered">
                 <tbody id="view_detail_tbodyid">
                 </tbody>
             </table>
@@ -341,17 +330,17 @@
         trHTML +=
                 '<tr>' +
                 '<td>Type</td>' +
-                '<td>Amount</td>' +
                 '<td>Budget</td>' +
+                '<td>Amount</td>' +
                 '</tr>';
 
         var monthlyData = getMonthlyData(monthId, allRecords);
 
         trHTML +=
-                '<tr>' +
-                '<td>All</td>' +
-                '<td>' + monthlyData.totalAmount + '</td>' +
+                '<tr style="color:green">' +
+                '<td>Total</td>' +
                 '<td>' + monthlyData.totalBudget + '</td>' +
+                '<td>' + monthlyData.totalAmount + '</td>' +
                 '</tr>';
 
         for (var p in monthlyData.types) {
@@ -361,8 +350,8 @@
             trHTML +=
                     '<tr>' +
                     '<td>' + typeData.typeName + '</td>' +
-                    '<td>' + typeData.amount + '</td>' +
                     '<td>' + typeData.budget + '</td>' +
+                    '<td>' + typeData.amount + '</td>' +
                     '<td>' + detailButton + '</td>' +
                     '</tr>';
         }
