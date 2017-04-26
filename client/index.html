@@ -258,7 +258,6 @@
     // Main
     initializeViewData();
     doGetTypes();
-    doGetAllRecord();
 
     function initializeViewData() {
         currentMonth = getCurrentMonth();
@@ -311,13 +310,18 @@
         });
     }
 
-    function doGetAllRecord() {
+    function doGetAllRecord(callback) {
         apiGetRecord(10000, function(err, results) {
             if (err) {
+                return callback(err);
                 alert(err);
             }
             else {
                 setAllRecords(results);
+                for (var m = 0; m <= currentMonth; m++) {
+                    getMonthlyData(m, allRecords);
+                }
+                return callback();
             }
         });
     }
@@ -359,9 +363,54 @@
         $('#view_overview_tbodyid').append(trHTML);
     }
 
-    function doShowYearlyView(yearId) {
-        //TODO:
+    function doShowYearlyView() {
+        var trHTML = '';
 
+        $("#view_overview_tbodyid").empty();
+
+        trHTML +=
+                '<tr>' +
+                '<td>Type</td>';
+        for (var p in monthlyDataSets) {
+            trHTML += '<td> ' + p + ' </td>'
+        }
+        trHTML +=
+                '<td>Budget</td>' +
+                '<td>Amount</td>' +
+                '</tr>';
+
+        var amount = 0;
+        trHTML +=
+                '<tr style="color:green">' +
+                '<td>Total</td>';
+        for (var p in monthlyDataSets) {
+            trHTML += '<td> ' + monthlyDataSets[p].totalAmount + ' </td>';
+            amount += monthlyDataSets[p].totalAmount;
+        }
+        trHTML +=
+                '<td>' + 0 + '</td>' +
+                '<td>' + amount + '</td>' +
+                '</tr>';
+
+        for (var t in types) {
+            //var detailButton = '<button onclick="doShowMonthlyTypeView(' + monthId + ',' + t + ')">' + '</button>';
+
+            amount = 0;
+            trHTML +=
+                    '<tr>' +
+                    '<td>' + types[t].name + '</td>';
+            for (var m in monthlyDataSets) {
+                trHTML += '<td onclick="doShowMonthlyTypeView(' + m + ',' + t + ')"> ';
+                trHTML += monthlyDataSets[m].types[t].amount + ' </td>';
+                amount += monthlyDataSets[m].types[t].amount;
+            }
+            trHTML +=
+                    '<td>' + budgets[t].amount + '</td>' +
+                    '<td>' + amount + '</td>' +
+                    '</tr>';
+        }
+
+        $('#view_overview_tbodyid').append(trHTML);
     }
 
     function doShowMonthlyTypeView(monthId, typeId) {
@@ -451,20 +500,32 @@
     });
 
     $("#btnViewRecordLastMonth").click(function() {
-        selectedPeriod = document.getElementById("btnViewRecordLastMonth").recordPeriod;
-        console.log('doShowMonthlyView==>' + selectedPeriod.b + ':' + getMonthId(selectedPeriod.b + 1));
-
-        doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
+        doGetAllRecord(function(err) {
+            if (err) {
+                return;
+            }
+            selectedPeriod = document.getElementById("btnViewRecordLastMonth").recordPeriod;
+            doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
+        });
     });
 
     $("#btnViewRecordThisMonth").click(function() {
-        selectedPeriod = document.getElementById("btnViewRecordThisMonth").recordPeriod;
-        doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
+        doGetAllRecord(function(err) {
+            if (err) {
+                return;
+            }
+            selectedPeriod = document.getElementById("btnViewRecordThisMonth").recordPeriod;
+            doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
+        });
     });
 
     $("#btnViewRecordThisYear").click(function() {
-        selectedPeriod = document.getElementById("btnViewRecordThisYear").recordPeriod;
-        doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
+        doGetAllRecord(function(err) {
+            if (err) {
+                return;
+            }
+            doShowYearlyView();
+        });
     });
 
     $("#btnGetRecord").click(function() {
