@@ -63,6 +63,19 @@
         /*#divButtonContainer {*/
             /*margin: 30px 0;*/
         /*}*/
+        .clickable:hover {
+            cursor: pointer;
+            background-color: #4CAF50; /* Green */
+        }
+        .bgGray {
+            background-color: gray;
+        }
+        .bgDimGray {
+            background-color: dimgray;
+        }
+        .bgBrown {
+            background-color: brown;
+        }
     </style>
 </head>
 <body>
@@ -90,28 +103,17 @@
         </div>
         <div>
             <input type="button" id="btnGetRecord" class=" btnCommon" value="Last 10">
-            <input type="button" id="btnSummarize" class=" btnCommon" value="Summary">
+            <input type="button" id="btnViewRecordThisYear" class="centered btnCommon" value="Summary">
         </div>
     </div>
     <div id="divView" class="textCentered">
         <div id="divResult" class="textCentered">
-            <table id="records_table" border='1' class="resultText textCentered centered">
-                <tbody id="tbodyid">
-                </tbody>
-            </table>
+        </div>
+        <div id="divResultDetail" class="textCentered">
         </div>
     </div>
     <div id="divViewRecord">
-        <div>
-            <input type="button" id="btnViewRecordLastMonth" class="centered btnCommon" value="Last Month">
-            <input type="button" id="btnViewRecordThisMonth" class="centered btnCommon" value="This Month">
-            <input type="button" id="btnViewRecordThisYear" class="centered btnCommon" value="This Year">
-        </div>
         <div id="divViewRecordResult" class="textCentered">
-            <table id="view_records_overview_table" border='1' class="resultText textCentered">
-                <tbody id="view_overview_tbodyid">
-                </tbody>
-            </table>
             <table id="view_records_detail_table" border='1' class="resultText textCentered">
                 <tbody id="view_detail_tbodyid">
                 </tbody>
@@ -265,8 +267,6 @@
         // cal current month and last month and current year
 
         // set button data
-        document.getElementById("btnViewRecordLastMonth").recordPeriod = getPeriodOfMonth(-1);
-        document.getElementById("btnViewRecordThisMonth").recordPeriod = selectedPeriod = getPeriodOfMonth(0);
         document.getElementById("btnViewRecordThisYear").recordPeriod = getPeriodOfMonth(0);
 
         var options = {
@@ -329,8 +329,6 @@
     function doShowMonthlyView(monthId) {
         var trHTML = '';
 
-        $("#view_overview_tbodyid").empty();
-
         trHTML +=
                 '<tr>' +
                 '<td>Type</td>' +
@@ -340,13 +338,6 @@
 
         var monthlyData = getMonthlyData(monthId, allRecords);
 
-        trHTML +=
-                '<tr style="color:green">' +
-                '<td>Total</td>' +
-                '<td>' + monthlyData.totalBudget + '</td>' +
-                '<td>' + monthlyData.totalAmount + '</td>' +
-                '</tr>';
-
         for (var p in monthlyData.types) {
             var typeData = monthlyData.types[p];
             var detailButton = '<button onclick="doShowMonthlyTypeView(' + monthId + ',' + p + ')">' + '</button>';
@@ -355,42 +346,43 @@
                     '<tr>' +
                     '<td>' + typeData.typeName + '</td>' +
                     '<td>' + typeData.budget + '</td>' +
-                    '<td>' + typeData.amount + '</td>' +
+                    '<td>' + formatCurrency(typeData.amount) + '</td>' +
                     '<td>' + detailButton + '</td>' +
                     '</tr>';
         }
 
-        $('#view_overview_tbodyid').append(trHTML);
+        trHTML +=
+                '<tr style="color:green">' +
+                '<td>Total</td>' +
+                '<td>' + monthlyData.totalBudget + '</td>' +
+                '<td>' + monthlyData.totalAmount + '</td>' +
+                '</tr>';
+
+        var tbHTML =
+                '<table id="view_records_overview_table" border="1" class="resultText textCentered">' +
+                '<tbody id="view_overview_tbodyid">' +
+                trHTML +
+                '</tbody>' +
+                '</table>';
+
+        $('#divResult').html(tbHTML);
     }
 
     function doShowYearlyView() {
         var trHTML = '';
 
-        $("#view_overview_tbodyid").empty();
-
         trHTML +=
-                '<tr>' +
+                '<tr class="bgDimGray">' +
                 '<td>Type</td>';
         for (var p in monthlyDataSets) {
-            trHTML += '<td> ' + p + ' </td>'
+            trHTML += '<td> ' + (parseInt(p) + 1) + ' </td>'
         }
         trHTML +=
+                '<td>Total</td>' +
                 '<td>Budget</td>' +
-                '<td>Amount</td>' +
                 '</tr>';
 
         var amount = 0;
-        trHTML +=
-                '<tr style="color:green">' +
-                '<td>Total</td>';
-        for (var p in monthlyDataSets) {
-            trHTML += '<td> ' + monthlyDataSets[p].totalAmount + ' </td>';
-            amount += monthlyDataSets[p].totalAmount;
-        }
-        trHTML +=
-                '<td>' + 0 + '</td>' +
-                '<td>' + amount + '</td>' +
-                '</tr>';
 
         for (var t in types) {
             //var detailButton = '<button onclick="doShowMonthlyTypeView(' + monthId + ',' + t + ')">' + '</button>';
@@ -400,21 +392,43 @@
                     '<tr>' +
                     '<td>' + types[t].name + '</td>';
             for (var m in monthlyDataSets) {
-                trHTML += '<td onclick="doShowMonthlyTypeView(' + m + ',' + t + ')"> ';
-                trHTML += monthlyDataSets[m].types[t].amount + ' </td>';
+                trHTML += '<td class="clickable" onclick="doShowMonthlyTypeView(' + m + ',' + t + ')"> ';
+                trHTML += formatCurrency(monthlyDataSets[m].types[t].amount);
+                trHTML += '</td> ';
+
                 amount += monthlyDataSets[m].types[t].amount;
             }
             trHTML +=
-                    '<td>' + budgets[t].amount + '</td>' +
-                    '<td>' + amount + '</td>' +
+                    '<td class="bgGray">' + formatCurrency(amount) + '</td>' +
+                    '<td class="bgBrown">' + formatCurrency(budgets[t].amount) + '</td>' +
                     '</tr>';
         }
 
-        $('#view_overview_tbodyid').append(trHTML);
+        // total per month
+        trHTML +=
+                '<tr class="bgDimGray">' +
+                '<td>Total</td>';
+        for (var p in monthlyDataSets) {
+            trHTML += '<td> ' + formatCurrency(monthlyDataSets[p].totalAmount) + ' </td>';
+            amount += monthlyDataSets[p].totalAmount;
+        }
+        trHTML +=
+                '<td>' + formatCurrency(amount) + '</td>' +
+                '<td></td>' +
+                '</tr>';
+
+        var tbHTML =
+                '<table id="view_records_overview_table" border="1" class="resultText textCentered">' +
+                '<tbody id="view_overview_tbodyid">' +
+                trHTML +
+                '</tbody>' +
+                '</table>';
+
+        $('#divResult').html(tbHTML);
+        $("#divResultDetail").empty();
     }
 
     function doShowMonthlyTypeView(monthId, typeId) {
-        $("#view_records_detail_table").empty();
 
         var records = monthlyDataSets[monthId].types[typeId].records;
         var trHTML = '';
@@ -426,8 +440,15 @@
                     '<td>' + convertToLocalTimeString(value.createdAt) + '</td>' +
                     '</tr>';
         });
+        var tbHTML =
+                '<table id="view_records_detail_table" border="1" class="resultText textCentered">' +
+                '<tbody id="view_detail_tbodyid">' +
+                trHTML +
+                '</tbody>' +
+                '</table>';
 
-        $('#view_records_detail_table').append(trHTML);
+
+        $('#divResultDetail').html(tbHTML);
     }
 
     function doShowRecordList(counts) {
@@ -436,7 +457,6 @@
                 alert(err);
             }
             else {
-                $("#tbodyid").empty();
 
                 records = response;
 
@@ -448,14 +468,22 @@
 
                     trHTML +=
                             '<tr><td>' + editButton +
-                            '</td><td>' + value.amount +
+                            '</td><td>' + formatCurrency(value.amount) +
                             '</td><td>' + getTypeNameById(value.tid) +
                             '</td><td>' + value.comment +
                             '</td><td>' + convertToLocalTimeString(value.createdAt) +
                             '</td></tr>';
                 });
 
-                $('#tbodyid').append(trHTML);
+                var tbHTML =
+                        '<table id="records_table" border="1" class="resultText textCentered centered">' +
+                        '<tbody id="tbodyid">' +
+                        trHTML +
+                        '</tbody>' +
+                        '</table>';
+
+                $('#divResult').html(tbHTML);
+                $("#divResultDetail").empty();
             }
         });
     }
@@ -499,26 +527,6 @@
         });
     });
 
-    $("#btnViewRecordLastMonth").click(function() {
-        doGetAllRecord(function(err) {
-            if (err) {
-                return;
-            }
-            selectedPeriod = document.getElementById("btnViewRecordLastMonth").recordPeriod;
-            doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
-        });
-    });
-
-    $("#btnViewRecordThisMonth").click(function() {
-        doGetAllRecord(function(err) {
-            if (err) {
-                return;
-            }
-            selectedPeriod = document.getElementById("btnViewRecordThisMonth").recordPeriod;
-            doShowMonthlyView(getMonthId(selectedPeriod.b + 1) + 1);
-        });
-    });
-
     $("#btnViewRecordThisYear").click(function() {
         doGetAllRecord(function(err) {
             if (err) {
@@ -532,62 +540,11 @@
         doShowRecordList(10);
     });
 
-    $("#btnSummarize").click(function() {
-        apiGetRecord(null, function(err, response) {
-            if (err) {
-                alert(err);
-            }
-            else {
-                $("#tbodyid").empty();
-
-                var totalAmount = 0;
-                var amounts = {};
-                $.each(response, function (key, value) {
-                    if (amounts[value.tid] === undefined) {
-                        amounts[value.tid] = value.amount;
-                    }
-                    else {
-                        amounts[value.tid] += value.amount;
-                    }
-                    totalAmount += value.amount;
-                });
-
-                var trHTML = '<tr><td>Total</td><td>' + totalAmount + '</td></tr>';
-
-                for (var p in amounts) {
-                    trHTML +=
-                            '<tr><td>' + getTypeNameById(p) +
-                            '</td><td>' + amounts[p] +
-                            '</td></tr>';
-                }
-
-                $('#tbodyid').append(trHTML);
-            }
-        });
-    });
-
-    $("#btnBudget").click(function() {
-        $("#tbodyid").empty();
-
-        countPurchase(function(err) {
-            if (err) {
-                alert(err);
-                return;
-            }
-
-            var trHTML = '';
-
-            for (var p in budgets) {
-                trHTML +=
-                        '<tr><td>' + getTypeNameById(budgets[p].tid) +
-                        '</td><td>' + budgets[p].amount +
-                        '</td><td>' + (purchase[p] ? purchase[p] : 0) +
-                        '</td></tr>';
-            }
-
-            $('#tbodyid').append(trHTML);
-        });
-    });
+    // General Function
+    function formatCurrency(s) {
+        var temp = s.toFixed(0).replace(/(\d)(?=(\d{3})+$)/g, '$1,');
+        return temp;
+    }
 
     // Restful API adapter
     function apiGetTypes(callback) {
