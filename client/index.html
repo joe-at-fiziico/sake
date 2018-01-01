@@ -428,7 +428,7 @@
                     '<tr>' +
                     '<td>' + types[t].name + '</td>';
             for (var m in selectedMonthlyDataSets) {
-                trHTML += '<td class="clickable" onclick="doShowMonthlyTypeView(' + m + ',' + t + ')"> ';
+                trHTML += '<td class="clickable" onclick="doShowMonthlyTypeView(' + "'" + selectedYear + "-" + m + "'," + t + ')"> ';
                 trHTML += formatCurrency(selectedMonthlyDataSets[m].types[t].amount);
                 trHTML += '</td> ';
 
@@ -471,7 +471,6 @@
     }
 
     function doShowMonthlyTypeView(monthId, typeId) {
-
         var records = monthlyDataSets[monthId].types[typeId].records;
         var trHTML = '';
         $.each(records, function (key, value) {
