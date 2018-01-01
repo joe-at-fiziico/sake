@@ -12,8 +12,8 @@
         body {
             background: rgb(30, 30, 30);
             color: white;
-            font: 200%/1.45em "Helvetica Neue", HelveticaNeue, Helvetica, Arial, sans-serif;
-            padding: 40px;
+            font: 200%/1.3em "Helvetica Neue", HelveticaNeue, Helvetica, Arial, sans-serif;
+            padding: 30px;
         }
         .hide {
             display: none
@@ -113,7 +113,8 @@
         </div>
         <div>
             <input type="button" id="btnGetRecord" class="btnCommon" value="Last 10">
-            <input type="button" id="btnViewRecordThisYear" class="btnCommon" value="Summary">
+            <input type="button" id="btnViewRecord2018" class="btnCommon btnViewRecordYearly" value="2018">
+            <input type="button" id="btnViewRecord2017" class="btnCommon btnViewRecordYearly" value="2017">
         </div>
     </div>
     <div id="divView" class="textCentered">
@@ -194,8 +195,7 @@
     function getMonthId(value) {
         var date = new Date(value);
         date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
-
-        return date.getMonth();
+        return date.getFullYear() + "-" + date.getMonth();
     }
 
     function getTypeNameById(tid) {
@@ -223,7 +223,6 @@
     }
 
     function getMonthlyData(monthId, records) {
-
         if (monthlyDataSets[monthId]) {
             return monthlyDataSets[monthId];
         }
@@ -328,8 +327,10 @@
             }
             else {
                 setAllRecords(results);
-                for (var m = 0; m <= currentMonth; m++) {
-                    getMonthlyData(m, allRecords);
+                for (var y = 2017; y <= 2018; y++) {
+                    for (var m = 0; m <= 11; m++) {
+                        getMonthlyData(y + "-" + m, allRecords);
+                    }
                 }
                 return callback();
             }
@@ -378,22 +379,46 @@
         $('#divResult').html(tbHTML);
     }
 
-    function doShowYearlyView() {
+    function doShowYearlyView(selectedYear) {
+        var selectedMonthlyDataSets = {};
+        for (var q in monthlyDataSets) {
+            let p = q.split("-");
+            if (p[0] === selectedYear) {
+                selectedMonthlyDataSets[p[1]] = monthlyDataSets[q];
+            }
+        }
+
+        // remove future columns if it's actually empty
+        let dt = new Date();
+        if (selectedYear == dt.getFullYear()) {
+            for (let i=11; i>=dt.getMonth(); i--) {
+                if (selectedMonthlyDataSets[i].totalAmount === 0) {
+                    delete selectedMonthlyDataSets[i];
+                }
+                else {
+                    break;
+                }
+            }
+        }
+
         var trHTML = '';
 
         trHTML +=
                 '<tr class="bgDimGray">' +
                 '<td>Type</td>';
-        for (var p in monthlyDataSets) {
+        for (var p in selectedMonthlyDataSets) {
             trHTML += '<td> ' + (parseInt(p) + 1) + ' </td>'
         }
         trHTML +=
-                '<td>Total</td>' +
-                '<td>Budget</td>' +
+                '<td>Budget Y</td>' +
+                '<td>Total Y</td>' +
+                '<td>Budget M</td>' +
+                '<td>Avg M</td>' +
                 '</tr>';
 
         var amount = 0;
         var grandbudget = 0;
+        var n_month = Object.keys(selectedMonthlyDataSets).length;
 
         for (var t in types) {
             //var detailButton = '<button onclick="doShowMonthlyTypeView(' + monthId + ',' + t + ')">' + '</button>';
@@ -402,17 +427,18 @@
             trHTML +=
                     '<tr>' +
                     '<td>' + types[t].name + '</td>';
-            for (var m in monthlyDataSets) {
+            for (var m in selectedMonthlyDataSets) {
                 trHTML += '<td class="clickable" onclick="doShowMonthlyTypeView(' + m + ',' + t + ')"> ';
-                trHTML += formatCurrency(monthlyDataSets[m].types[t].amount);
+                trHTML += formatCurrency(selectedMonthlyDataSets[m].types[t].amount);
                 trHTML += '</td> ';
 
-                amount += monthlyDataSets[m].types[t].amount;
+                amount += selectedMonthlyDataSets[m].types[t].amount;
             }
-            var mc = budgets[t].monthly? 'bgBrown' : 'bgDarkRed';
             trHTML +=
+                    '<td class="bgDarkRed">' + formatCurrency(budgets[t].monthly? budgets[t].amount * 12 : budgets[t].amount) + '</td>' +
                     '<td class="bgGray">' + formatCurrency(amount) + '</td>' +
-                    '<td class="'+ mc +'">' + formatCurrency(budgets[t].amount) + '</td>' +
+                    '<td class="bgBrown">' + formatCurrency(budgets[t].monthly? budgets[t].amount : budgets[t].amount / 12) + '</td>' +
+                    '<td class="bgGray">' + formatCurrency(amount/n_month) + '</td>' +
                     '</tr>';
 
             grandbudget += budgets[t].amount * (budgets[t].monthly? 12 : 1) ;
@@ -422,13 +448,15 @@
         trHTML +=
                 '<tr class="bgDimGray">' +
                 '<td>Total</td>';
-        for (var p in monthlyDataSets) {
-            trHTML += '<td> ' + formatCurrency(monthlyDataSets[p].totalAmount) + ' </td>';
-            amount += monthlyDataSets[p].totalAmount;
+        for (var p in selectedMonthlyDataSets) {
+            trHTML += '<td> ' + formatCurrency(selectedMonthlyDataSets[p].totalAmount) + ' </td>';
+            amount += selectedMonthlyDataSets[p].totalAmount;
         }
         trHTML +=
-                '<td>' + formatCurrency(amount) + '</td>' +
                 '<td class="bgDarkRed">' + formatCurrency(grandbudget) + '</td>' +
+                '<td>' + formatCurrency(amount) + '</td>' +
+                '<td class="bgBrown">' + formatCurrency(grandbudget/12) + '</td>' +
+                '<td>' + formatCurrency(amount/n_month) + '</td>' +
                 '</tr>';
 
         var tbHTML =
@@ -541,12 +569,13 @@
         });
     });
 
-    $("#btnViewRecordThisYear").click(function() {
+    $(".btnViewRecordYearly").click(function() {
+        let selectedYear = this.value;
         doGetAllRecord(function(err) {
             if (err) {
                 return;
             }
-            doShowYearlyView();
+            doShowYearlyView(selectedYear);
         });
     });
 
