@@ -276,7 +276,7 @@
         // cal current month and last month and current year
 
         // set button data
-        document.getElementById("btnViewRecordThisYear").recordPeriod = getPeriodOfMonth(0);
+        //document.getElementById("btnViewRecordThisYear").recordPeriod = getPeriodOfMonth(0);
 
         var options = {
             weekday: "short",
@@ -288,10 +288,10 @@
         };
 
         // set list data
-        for (var m = 0; m <= currentMonth; m++) {
-            console.log('initializeViewData==>' + m + ':' + getPeriodOfMonth(m - currentMonth).b);
-            $("#selectViewRecord").append($("<option></option>").attr("value", getPeriodOfMonth(m - currentMonth)).text(m));
-        }
+//        for (var m = 0; m <= currentMonth; m++) {
+//            console.log('initializeViewData==>' + m + ':' + getPeriodOfMonth(m - currentMonth).b);
+//            $("#selectViewRecord").append($("<option></option>").attr("value", getPeriodOfMonth(m - currentMonth)).text(m));
+//        }
     }
 
     function doGetTypes() {
@@ -546,10 +546,10 @@
 
     // Event handler
 
-    $("#selectViewRecord").change(function () {
-        selectedPeriod = $('#selectViewRecord').find('option:selected').value;
-        doShowMonthlyView(getMonthId(selectedPeriod.b + 1));
-    });
+//    $("#selectViewRecord").change(function () {
+//        selectedPeriod = $('#selectViewRecord').find('option:selected').value;
+//        doShowMonthlyView(getMonthId(selectedPeriod.b + 1));
+//    });
 
     $("#btnAddRecord").click(function() {
         var amount = $("#textAmount").val();
