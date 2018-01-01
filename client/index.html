@@ -10,9 +10,9 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
     <style>
         body {
-            background: black;
+            background: rgb(30, 30, 30);
             color: white;
-            font: 300%/1.45em "Helvetica Neue", HelveticaNeue, Helvetica, Arial, sans-serif;
+            font: 200%/1.45em "Helvetica Neue", HelveticaNeue, Helvetica, Arial, sans-serif;
             padding: 40px;
         }
         .hide {
@@ -55,6 +55,10 @@
             font-size: 32px;
             margin: 20px;
         }
+        #btnAddRecord {
+            background-color: red;
+            color: white;
+        }
         .resultText {
             color: white;
             font-size: 50%;
@@ -75,6 +79,12 @@
         }
         .bgBrown {
             background-color: brown;
+        }
+        .bgDarkRed {
+            background-color: darkred;
+        }
+        td {
+            min-width: 90px;
         }
     </style>
 </head>
@@ -99,11 +109,11 @@
     </div>
     <div id="divButtonContainer" class="centered">
         <div>
-            <input type="button" id="btnAddRecord" class=" btnCommon" value="Add">
+            <input type="button" id="btnAddRecord" class="btnCommon" value="Add">
         </div>
         <div>
-            <input type="button" id="btnGetRecord" class=" btnCommon" value="Last 10">
-            <input type="button" id="btnViewRecordThisYear" class="centered btnCommon" value="Summary">
+            <input type="button" id="btnGetRecord" class="btnCommon" value="Last 10">
+            <input type="button" id="btnViewRecordThisYear" class="btnCommon" value="Summary">
         </div>
     </div>
     <div id="divView" class="textCentered">
@@ -383,6 +393,7 @@
                 '</tr>';
 
         var amount = 0;
+        var grandbudget = 0;
 
         for (var t in types) {
             //var detailButton = '<button onclick="doShowMonthlyTypeView(' + monthId + ',' + t + ')">' + '</button>';
@@ -398,10 +409,13 @@
 
                 amount += monthlyDataSets[m].types[t].amount;
             }
+            var mc = budgets[t].monthly? 'bgBrown' : 'bgDarkRed';
             trHTML +=
                     '<td class="bgGray">' + formatCurrency(amount) + '</td>' +
-                    '<td class="bgBrown">' + formatCurrency(budgets[t].amount) + '</td>' +
+                    '<td class="'+ mc +'">' + formatCurrency(budgets[t].amount) + '</td>' +
                     '</tr>';
+
+            grandbudget += budgets[t].amount * (budgets[t].monthly? 12 : 1) ;
         }
 
         // total per month
@@ -414,7 +428,7 @@
         }
         trHTML +=
                 '<td>' + formatCurrency(amount) + '</td>' +
-                '<td></td>' +
+                '<td class="bgDarkRed">' + formatCurrency(grandbudget) + '</td>' +
                 '</tr>';
 
         var tbHTML =
