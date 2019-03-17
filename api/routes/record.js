@@ -34,7 +34,7 @@ router.post('/', async (req, res, next) => {
     const {
       body: {
         amount,
-        tid,
+        type: tid,
         time,
         comment
       }
@@ -43,7 +43,7 @@ router.post('/', async (req, res, next) => {
       amount,
       tid,
       comment,
-      createdAt: dayjs(time).format()
+      createdAt: time || dayjs().format()
     })
     res.json(record)
   } catch (err) {
@@ -62,7 +62,7 @@ router.put('/:id', async (req, res, next) => {
       },
       body: {
         amount,
-        tid,
+        type: tid,
         comment
       }
     } = req

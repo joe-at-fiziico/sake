@@ -533,7 +533,7 @@
 
     function doSetEditId(id) {
         var amount = $("#textAmount").val();
-        var typeId = $("#textTypeId").val();
+        var typeId = $('#selectTypeId').find('option:selected').val();
         var comment = $("#textComment").val();
         apiEditRecord(id, amount, typeId, comment, function(err) {
             if (err) {
@@ -557,7 +557,7 @@
 
         var typeId = $('#selectTypeId').find('option:selected').val();
         var comment = $("#textComment").val();
-        var time = new Date().getTime();
+        var time = new Date().toISOString();
         apiAddRecord(amount, typeId, time, comment, function(err) {
             if (err) {
                 alert(err);
