@@ -15,8 +15,8 @@ function add(Record) {
             amount: amount,
             tid: type,
             comment: comment,
-            createdAt: time,
-            updatedAt: time
+            createdAt: time || new Date().getTime(),
+            updatedAt: time || new Date().getTime()
         }, function(err, record) {
             return callback(err, record);
         });
@@ -29,7 +29,7 @@ function add(Record) {
             accepts: [
                 {arg: 'amount', type: 'number', description: 'Amount', required: true},
                 {arg: 'type', type: 'number', description: 'Type id', required: true},
-                {arg: 'time', type: 'number', description: 'Time', required: true},
+                {arg: 'time', type: 'number', description: 'Time', required: false},
                 {arg: 'location', type: 'string', description: 'Location', required: false},
                 {arg: 'comment', type: 'string', description: 'Comment', required: false},
                 {arg: 'photo', type: 'string', description: 'Photo', required: false}
