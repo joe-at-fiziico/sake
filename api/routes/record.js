@@ -1,4 +1,5 @@
 const express = require('express')
+const dayjs = require('dayjs')
 
 const {
   Record
@@ -34,7 +35,7 @@ router.post('/', async (req, res, next) => {
       body: {
         amount,
         tid,
-        time: createdAt = new Date().toISOString(),
+        time,
         comment
       }
     } = req
@@ -42,7 +43,7 @@ router.post('/', async (req, res, next) => {
       amount,
       tid,
       comment,
-      createdAt
+      createdAt: dayjs(time).format()
     })
     res.json(record)
   } catch (err) {
