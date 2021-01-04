@@ -114,6 +114,7 @@
         </div>
         <div>
             <input type="button" id="btnGetRecord" class="btnCommon" value="Last 10">
+            <input type="button" id="btnViewRecord2021" class="btnCommon btnViewRecordYearly" value="2021">
             <input type="button" id="btnViewRecord2020" class="btnCommon btnViewRecordYearly" value="2020">
             <input type="button" id="btnViewRecord2019" class="btnCommon btnViewRecordYearly" value="2019">
             <input type="button" id="btnViewRecord2018" class="btnCommon btnViewRecordYearly" value="2018">
@@ -330,7 +331,7 @@
             }
             else {
                 setAllRecords(results);
-                for (var y = 2017; y <= 2020; y++) {
+                for (var y = 2017; y <= 2021; y++) {
                     for (var m = 0; m <= 11; m++) {
                         getMonthlyData(y + "-" + m, allRecords);
                     }
